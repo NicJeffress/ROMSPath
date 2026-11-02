@@ -44,13 +44,13 @@ SUBROUTINE bounds(ng,Ipar,Jpar,nmask,ingrid,obound)
 !This subroutine is for adding boundary points to bnds
 ! INPUT:
   use grid_mod,   	only: GRIDS 
-  use param_mod,    only: xi_rho,eta_rho	
+  use param_mod,    only: xi_rho,eta_rho,PeriodicBoundary_X,PeriodicBoundary_Y
   use int_mod,    only: inside	
   IMPLICIT NONE
   DOUBLE PRECISION,  INTENT(IN) :: Ipar,Jpar
   DOUBLE PRECISION :: X,Y,ecut,fcut
   DOUBLE PRECISION :: tX(4),tY(4),m(2,2)
-  INTEGER :: I,J,it,jt,n
+  INTEGER :: I,J,it,jt,n,ilo,ihi,jlo,jhi
   LOGICAL :: incell
   INTEGER, INTENT(IN) :: ng 
   INTEGER, INTENT(OUT) :: nmask 
@@ -59,6 +59,20 @@ SUBROUTINE bounds(ng,Ipar,Jpar,nmask,ingrid,obound)
 	fcut=1.0-ecut! POSSIBLY ADD TO PARAM_MOD	
 	ingrid=.FALSE.
 	obound=.FALSE.
+	! In a periodic direction positions live in
+	! [1.5, n-0.5), so cells 1 and n-1 (ghost to ghost) are in the grid
+	ilo=2
+	ihi=xi_rho(ng)-1
+	jlo=2
+	jhi=eta_rho(ng)-1
+	if (PeriodicBoundary_X) then
+		ilo=1
+		ihi=xi_rho(ng)
+	endif
+	if (PeriodicBoundary_Y) then
+		jlo=1
+		jhi=eta_rho(ng)
+	endif
 	I=floor(Ipar)
 	J=floor(Jpar)
 	X=Ipar-dble(I)
@@ -68,7 +82,7 @@ SUBROUTINE bounds(ng,Ipar,Jpar,nmask,ingrid,obound)
 	tX=0.0d0
 	tY=0.0d0
 	
-	if ((I.GT.1).and.(J.GT.1).and.(I.LT.(xi_rho(ng)-1)).and.(J.LT.(eta_rho(ng)-1)))  then
+	if ((I.GE.ilo).and.(J.GE.jlo).and.(I.LT.ihi).and.(J.LT.jhi))  then
 		m(1,1) = GRIDS(ng)%mask_rho(I,J)
 		m(2,1) = GRIDS(ng)%mask_rho(I+1,J)
 		m(2,2) = GRIDS(ng)%mask_rho(I+1,J+1)
@@ -128,7 +142,7 @@ SUBROUTINE bounds(ng,Ipar,Jpar,nmask,ingrid,obound)
 		endif
 		
 		
-		if ((I.LE.1).or.(J.LE.1).or.(I.GE.xi_rho(ng)-1).or.(J.GE.eta_rho(ng)-1))  then
+		if ((I.LT.ilo).or.(J.LT.jlo).or.(I.GE.ihi).or.(J.GE.jhi))  then
 			obound=.TRUE.
 		endif
 		

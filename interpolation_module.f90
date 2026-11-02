@@ -418,7 +418,7 @@ CONTAINS
       END IF
       RETURN
       END FUNCTION inside
-	  DOUBLE PRECISION FUNCTION getInterp2d(var,ng,Ipar,Jpar,t)
+	  DOUBLE PRECISION FUNCTION getInterp2d(var,ng,IparIn,JparIn,t)
 		!This Function returns the interpolated value at the particle's location 
 		!  
 		use grid_mod, only: GRIDS
@@ -426,13 +426,16 @@ CONTAINS
 		IMPLICIT NONE
 		CHARACTER(LEN=*), INTENT(IN) :: var
 		INTEGER, INTENT(IN) :: ng
-		DOUBLE PRECISION, INTENT(IN) :: Ipar,Jpar
+		DOUBLE PRECISION, INTENT(IN) :: IparIn,JparIn
+		DOUBLE PRECISION :: Ipar,Jpar   ! position wrapped into the periodic window
 		INTEGER :: Inode,Jnode,t,i
 		DOUBLE PRECISION :: v(4),m(4),cff(4)
 		DOUBLE PRECISION :: cff4,X,Y
 		DOUBLE PRECISION :: Ival,nwater
 
-	    Inode=floor(Ipar)
+	    Ipar=pwrapx(ng,IparIn)
+		Jpar=pwrapy(ng,JparIn)
+		Inode=floor(Ipar)
 		Jnode=floor(Jpar)
 
 		X=Ipar-Inode
@@ -506,7 +509,7 @@ CONTAINS
 
 	  END FUNCTION getInterp2D
 	  
-	DOUBLE PRECISION FUNCTION getInterp3d(var,ng,Ipar,Jpar,Zpar,t,ztype,zeta,depth)
+	DOUBLE PRECISION FUNCTION getInterp3d(var,ng,IparIn,JparIn,Zpar,t,ztype,zeta,depth)
 		!This Function returns the interpolated value at the particle's location 
 		!  using the interpolation variables stored from function setInterp, and
 		!  the hydrodynamic variables that have been read in
@@ -518,7 +521,8 @@ CONTAINS
 		IMPLICIT NONE
 		CHARACTER(LEN=*), INTENT(IN) :: var
 		INTEGER, INTENT(IN) :: ng,t,ztype
-		DOUBLE PRECISION, INTENT(IN) :: Ipar,Jpar,Zpar,zeta,depth
+		DOUBLE PRECISION, INTENT(IN) :: IparIn,JparIn,Zpar,zeta,depth
+		DOUBLE PRECISION :: Ipar,Jpar   ! position wrapped into the periodic window
 		INTEGER :: Inode,Jnode,nz,i,Itop,Ibot
 		DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:) :: zprof
 		DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:,:) :: v
@@ -591,6 +595,8 @@ CONTAINS
 		ALLOCATE(v(4,nz))
 		ALLOCATE(zprof(nz))
 		
+		Ipar=pwrapx(ng,IparIn)
+		Jpar=pwrapy(ng,JparIn)
 		Inode=floor(Ipar)
 		Jnode=floor(Jpar)
 		X=Ipar-Inode
@@ -961,7 +967,7 @@ CONTAINS
 
 	  END FUNCTION getInterp3D
 	  
-	  DOUBLE PRECISION FUNCTION getInterpStr(var,ng,Ipar,Jpar,t)
+	  DOUBLE PRECISION FUNCTION getInterpStr(var,ng,IparIn,JparIn,t)
 		!This Function returns the interpolated value at the particle's location 
 		!  using the interpolation variables stored from function setInterp, and
 		!  the hydrodynamic variables that have been read in
@@ -973,7 +979,8 @@ CONTAINS
 		IMPLICIT NONE
 		CHARACTER(LEN=*), INTENT(IN) :: var
 		INTEGER, INTENT(IN) :: ng,t
-		DOUBLE PRECISION, INTENT(IN) :: Ipar,Jpar
+		DOUBLE PRECISION, INTENT(IN) :: IparIn,JparIn
+		DOUBLE PRECISION :: Ipar,Jpar   ! position wrapped into the periodic window
 		INTEGER :: Inode,Jnode,i
 		DOUBLE PRECISION, ALLOCATABLE, DIMENSION(:) :: v
 		DOUBLE PRECISION :: m(4),cff(4)
@@ -985,6 +992,8 @@ CONTAINS
 		! write(*,*) '-----'
 		 !write(*,"(I,F10.4,F10.4,F10.4,F10.4,F10.4,F10.4)") ztype,zlev(1),ZPar,zlev(2),zeta,zcff(1),zcff(2)
 		! write(*,*) Itop,Ibot
+		Ipar=pwrapx(ng,IparIn)
+		Jpar=pwrapy(ng,JparIn)
 		Inode=floor(Ipar)
 		Jnode=floor(Jpar)
 		X=Ipar-Inode
@@ -1172,7 +1181,7 @@ CONTAINS
 		DEALLOCATE(v)
 
 	  END FUNCTION getInterpStr
-	subroutine getInterpAKs(ng,Ipar,Jpar,t,i,zprof)
+	subroutine getInterpAKs(ng,IparIn,JparIn,t,i,zprof)
 		!This Function returns the interpolated value at the particle's location 
 		!  using the interpolation variables stored from function setInterp, and
 		!  the hydrodynamic variables that have been read in
@@ -1183,7 +1192,8 @@ CONTAINS
 		
 		IMPLICIT NONE
 		INTEGER, INTENT(IN) :: ng,t,i
-		DOUBLE PRECISION, INTENT(IN) :: Ipar,Jpar
+		DOUBLE PRECISION, INTENT(IN) :: IparIn,JparIn
+		DOUBLE PRECISION :: Ipar,Jpar   ! position wrapped into the periodic window
 		INTEGER :: Inode,Jnode,nz
 		DOUBLE PRECISION, INTENT(OUT) :: zprof
 		DOUBLE PRECISION :: m(4),cff(4),v(4)
@@ -1195,6 +1205,8 @@ CONTAINS
 		nz=s_w(ng)
 
 
+		Ipar=pwrapx(ng,IparIn)
+		Jpar=pwrapy(ng,JparIn)
 		Inode=floor(Ipar)
 		Jnode=floor(Jpar)
 		X=Ipar-Inode
@@ -1227,6 +1239,36 @@ CONTAINS
 
 
 	  END subroutine getInterpAKs
+	DOUBLE PRECISION FUNCTION pwrapx(ng,X)
+		! ROMS periodic grids repeat every
+		! Lm = xi_rho-2 points (ghost columns 1 and xi_rho are copies of
+		! xi_rho-1 and 2). Map X into [1.5, xi_rho-0.5) so every stencil
+		! (rho: Inode..Inode+1 <= xi_rho; u: X-0.5 -> 1..xi_u) has data.
+		use param_mod, only: xi_rho,PeriodicBoundary_X
+		IMPLICIT NONE
+		INTEGER, INTENT(IN) :: ng
+		DOUBLE PRECISION, INTENT(IN) :: X
+		DOUBLE PRECISION :: P
+		pwrapx=X
+		if (PeriodicBoundary_X) then
+			P=DBLE(xi_rho(ng)-2)
+			pwrapx=X-P*floor((X-1.5d0)/P)
+		endif
+	END FUNCTION pwrapx
+
+	DOUBLE PRECISION FUNCTION pwrapy(ng,Y)
+		use param_mod, only: eta_rho,PeriodicBoundary_Y
+		IMPLICIT NONE
+		INTEGER, INTENT(IN) :: ng
+		DOUBLE PRECISION, INTENT(IN) :: Y
+		DOUBLE PRECISION :: P
+		pwrapy=Y
+		if (PeriodicBoundary_Y) then
+			P=DBLE(eta_rho(ng)-2)
+			pwrapy=Y-P*floor((Y-1.5d0)/P)
+		endif
+	END FUNCTION pwrapy
+
  SUBROUTINE getcoeff(X,Y,m,cff)
 		!This Function GETS coefficients
 		use grid_mod, only: GRIDS

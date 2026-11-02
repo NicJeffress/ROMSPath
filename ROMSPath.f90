@@ -625,7 +625,7 @@ contains
     USE HTURB_MOD,      ONLY: HTurb
     USE VTURB_MOD,      ONLY: VTurb
     USE ADVECTION_MOD,  ONLY: RKAdvect
-    USE INT_MOD,        ONLY: getinterp2d,getinterp3d,polintd,getInterpStr
+    USE INT_MOD,        ONLY: getinterp2d,getinterp3d,polintd,getInterpStr,pwrapx,pwrapy
 
     IMPLICIT NONE
 
@@ -823,31 +823,11 @@ contains
       newYpos = par(n,pY) + AdvectY + TurbHy
 
 
-    ! Nic J ADD THIS SECTION FOR PERIODIC WRAPPING
-! Simple debug print
-!print *, 'n=', n, 'newXpos=', newXpos, 'newYpos=', newYpos
+    ! Nic J periodic wrapping; wrap by the
+    ! ROMS period Lm = xi_rho-2 (was xi_rho-3: one cell lost per crossing)
     ngid = int(par(n,pGID))
-
-    ! Apply periodic wrapping if enabled
-    IF (PeriodicBoundary_X) THEN
-      IF (newXpos > DBLE(xi_rho(ngid)-1)) THEN
-        newXpos = newXpos - DBLE(xi_rho(ngid) - 3)
-      ELSEIF (newXpos < 2.0d0) THEN
-!print *, 'before n=', n, 'newXpos=', newXpos, 'newYpos=', newYpos
-
-        newXpos = newXpos + DBLE(xi_rho(ngid) - 3)
-!print *, 'after n=', n, 'newXpos=', newXpos, 'newYpos=', newYpos
-
-      ENDIF
-    ENDIF
-
-    IF (PeriodicBoundary_Y) THEN
-      IF (newYpos > DBLE(eta_rho(ngid)-1)) THEN
-        newYpos = newYpos - DBLE(eta_rho(ngid) - 3)
-      ELSEIF (newYpos < 2.0d0) THEN
-        newYpos = newYpos + DBLE(eta_rho(ngid) - 3)
-      ENDIF
-    ENDIF
+    newXpos = pwrapx(ngid,newXpos)
+    newYpos = pwrapy(ngid,newYpos)
     ! Nic J END OF PERIODIC WRAPPING SECTION
 
       ! !Assign new particle positions
