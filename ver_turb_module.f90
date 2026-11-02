@@ -128,6 +128,8 @@ CONTAINS
 	fitz(np)=z(s_w(ng))
     fitKH(1)=Pwc_KH(1)
 	fitKH(np)=Pwc_KH(s_w(ng))
+	dy(1)=serr     ! end weights (were never set)
+	dy(np)=serr
 	do i=2,np-1
 		fitz(i)=fitz(i-1)+dz
 		
