@@ -236,7 +236,7 @@ contains
   ! ! *                       Allocate Dynamic Variables                        *
   ! ! ***************************************************************************
 
-    ALLOCATE(par(numpar,nAttrib))
+     ALLOCATE(par(numpar,nAttrib))
 
     IF(SettlementOn)THEN
       ALLOCATE(startpoly(numpar))
@@ -612,7 +612,8 @@ contains
                               Behavior,SaltTempOn,OpenOceanBoundary,Swimdepth, &
                               TrackCollisions,WriteModelTiming,mortality,      &
                               ErrorFlag,t_b,t_c,t_f,Ngrid,vertdist,scheme,nsb, &
-							  SaltTempMean,WriteBottom,maxsize,Process_VA							  
+							  SaltTempMean,WriteBottom,maxsize,Process_VA,     &
+                              PeriodicBoundary_X,PeriodicBoundary_Y  !Nic J addded
     !USE SETTLEMENT_MOD, ONLY: isSettled,testSettlement
 #ifdef GROWTH
 	USE GROWTH_MOD,   ONLY:  growlarva
@@ -820,8 +821,34 @@ contains
       !Update due to Advection and Turbulence
       newXpos = par(n,pX) + AdvectX + TurbHx 
       newYpos = par(n,pY) + AdvectY + TurbHy
-	 
-       !
+
+
+    ! Nic J ADD THIS SECTION FOR PERIODIC WRAPPING
+! Simple debug print
+!print *, 'n=', n, 'newXpos=', newXpos, 'newYpos=', newYpos
+    ngid = int(par(n,pGID))
+
+    ! Apply periodic wrapping if enabled
+    IF (PeriodicBoundary_X) THEN
+      IF (newXpos > DBLE(xi_rho(ngid)-1)) THEN
+        newXpos = newXpos - DBLE(xi_rho(ngid) - 3)
+      ELSEIF (newXpos < 2.0d0) THEN
+!print *, 'before n=', n, 'newXpos=', newXpos, 'newYpos=', newYpos
+
+        newXpos = newXpos + DBLE(xi_rho(ngid) - 3)
+!print *, 'after n=', n, 'newXpos=', newXpos, 'newYpos=', newYpos
+
+      ENDIF
+    ENDIF
+
+    IF (PeriodicBoundary_Y) THEN
+      IF (newYpos > DBLE(eta_rho(ngid)-1)) THEN
+        newYpos = newYpos - DBLE(eta_rho(ngid) - 3)
+      ELSEIF (newYpos < 2.0d0) THEN
+        newYpos = newYpos + DBLE(eta_rho(ngid) - 3)
+      ENDIF
+    ENDIF
+    ! Nic J END OF PERIODIC WRAPPING SECTION
 
       ! !Assign new particle positions
 	  
@@ -1780,7 +1807,9 @@ contains
 			
 			
             call date_and_time(sdate,stime,zone,date_time)
-			write(sdatetime,"(I4'/'I0.2'/'I0.2' 'I0.2':'I0.2':'I0.2)") date_time(1),date_time(2),date_time(3),date_time(5),date_time(6),date_time(7)
+!			write(sdatetime,"(I4'/'I0.2'/'I0.2' 'I0.2':'I0.2':'I0.2)") date_time(1),date_time(2),date_time(3),date_time(5),date_time(6),date_time(7)
+            write(sdatetime,'(I4.4,"/",I2.2,"/",I2.2," ",I2.2,":",I2.2,":",I2.2)') &
+                  date_time(1), date_time(2), date_time(3), date_time(5), date_time(6), date_time(7)
 			
 			STATUS = NF90_PUT_ATT(NCID, NF90_GLOBAL, "Start_datetime", sdatetime)
 			IF(STATUS /= NF90_NOERR) WRITE(*,*) NF_STRERROR(STATUS)

@@ -591,9 +591,9 @@
 			countr(4)=1
 			
 			
-			STATUS = NF90_INQ_VARID(NCID,'ustokes',VID)
+			STATUS = NF90_INQ_VARID(NCID,'u_stokes',VID)
 			if (STATUS .NE. NF90_NOERR) then
-			  write(*,*) 'Problem find u'
+			  write(*,*) 'Problem find u stokes'
 			  write(*,*) NF90_STRERROR(STATUS)
 			  stop
 			endif
@@ -625,9 +625,9 @@
 			countr(3)=s_rho(ng)
 			countr(4)=1
 			
-			STATUS = NF90_INQ_VARID(NCID,'vstokes',VID)
+			STATUS = NF90_INQ_VARID(NCID,'v_stokes',VID)
 			if (STATUS .NE. NF90_NOERR) then
-			  write(*,*) 'Problem find v'
+			  write(*,*) 'Problem find v stokes'
 			  write(*,*) NF90_STRERROR(STATUS)
 			  stop
 			endif

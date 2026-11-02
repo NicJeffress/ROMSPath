@@ -270,7 +270,7 @@ CONTAINS
 			STATUS = NF90_INQ_VARID(NCID,'x_rho',VID)
 			STATUS = NF90_GET_VAR(NCID,VID,GRIDS(ng)%lon_rho)
 			if(STATUS .NE. NF90_NOERR) then
-				write(*,*)'Problem read x_rho'
+				write(*,*)'Problem read lon_rho'
 				err = 40 
 				call errorHandler(header,-1)
 			endif
@@ -279,7 +279,7 @@ CONTAINS
 			STATUS = NF90_INQ_VARID(NCID,'y_rho',VID)
 			STATUS = NF90_GET_VAR(NCID,VID,GRIDS(ng)%lat_rho)
 			if(STATUS .NE. NF90_NOERR) then
-				write(*,*)'Problem read y_rho'
+				write(*,*)'Problem read lat_rho'
 				err = 40 
 				call errorHandler(header,-1)
 			endif	

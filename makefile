@@ -10,7 +10,7 @@
 #==========================================================================
 
 #CPPFLAGS  = -DGROWTH -DWETDRY  -DSTOKES
-#CPPFLAGS  =  -DWETDRY
+CPPFLAGS  =  -DSTOKES
 
 #------------------------------------------------
 #    Set compiler and flags
@@ -33,8 +33,8 @@ ifdef GFORTRAN
   FC = gfortran
 
   CPPFLAGS  += -DGFORTRAN
-  FFLAGS = -march=k8 -ffast-math -fno-cx-limited-range -O3 -funroll-loops --param max-unroll-times=4 -ffree-line-length-none -cpp  $(CPPFLAGS) -I$(NETCDF_INCDIR)
-#   FFLAGS = -g -O0   -ffree-line-length-none -cpp  $(CPPFLAGS) -I$(NETCDF_INCDIR)
+#  FFLAGS = -march=native -ffast-math -fno-cx-limited-range -O3 -funroll-loops --param max-unroll-times=4 -ffree-line-length-none -cpp  $(CPPFLAGS) -I$(NETCDF_INCDIR)
+  FFLAGS = -g -O0   -ffree-line-length-none -cpp  $(CPPFLAGS) -I$(NETCDF_INCDIR)
 endif
 
 ifdef PGI

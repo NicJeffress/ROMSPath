@@ -101,6 +101,10 @@
   DOUBLE PRECISION :: constAks      ! Constant value for Aks if readAks is .FALSE.
   LOGICAL          :: readDens
   DOUBLE PRECISION :: constDens
+!Nic J adding
+  LOGICAL :: PeriodicBoundary_X     ! East-West periodicity
+  LOGICAL :: PeriodicBoundary_Y     ! North-South periodicity
+!Nic J done adding
   CHARACTER(LEN=200),Dimension(MAXNgrid) :: stokesprefix
   CHARACTER(LEN=200),Dimension(MAXNgrid) :: turbstd_v_a_prefix
   CHARACTER(LEN=200),Dimension(MAXNgrid) :: wavestd_prefix
@@ -108,10 +112,12 @@
   LOGICAL :: Process_VA           ! PROCESS Vort./accel and write to netcdf file.
   LOGICAL :: Process_WA           ! PROCESS Wave Accel and write to netcdf file.
 !
+!Nic J modified namelist
   namelist/hydroparam/readZeta,constZeta,readSalt,   &
                     & constSalt,readTemp,constTemp,readU,readU,constU,readV,     &
                     & constV,readW,constW,readAks,constAks,readDens,constDens,   &
-					& stokesprefix,turbstd_v_a_prefix,wavestd_prefix,Process_VA,Process_WA
+					& stokesprefix,turbstd_v_a_prefix,wavestd_prefix,Process_VA,Process_WA, &
+                    & PeriodicBoundary_X,PeriodicBoundary_Y
 
 
 !*** TURBULENCE MODULE PARAMETERS ***
