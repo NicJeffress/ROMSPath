@@ -307,6 +307,7 @@ contains
 	call	updateHydro(.TRUE.,1,t_b)
 	call	updateHydro(.FALSE.,2,t_c)
 	call	updateHydro(.FALSE.,3,t_f)
+	tstep=2   ! External step 3 reads record 4 (was 3: hydro one record behind)
 
     ! ! *************************************************************************
     ! ! *                   Initialize Particle Attributes                      *
