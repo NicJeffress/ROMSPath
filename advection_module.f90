@@ -93,9 +93,9 @@ CONTAINS
 	  	
       ! !Calculate the coordinates at the final position
 
-       x3 = Xpar + Uad*pm*DBLE(idt)/DBLE(2) 
-       y3 = Ypar + Vad*pn*DBLE(idt)/DBLE(2) 
-       z3 = Zpar + Wad*DBLE(idt)/DBLE(2) 
+       x3 = Xpar + Uad*pm*DBLE(idt)   ! RK4 4th stage at X + k3 dt (was dt/2)
+       y3 = Ypar + Vad*pn*DBLE(idt)
+       z3 = Zpar + Wad*DBLE(idt)
       ! if(z3 .GT. minpartdepth) z3 = minpartdepth - DBLE(0.000001)
       ! if(z3 .LT. maxpartdepth) z3 = maxpartdepth + DBLE(0.000001)
 
