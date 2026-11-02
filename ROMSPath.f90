@@ -744,7 +744,7 @@ contains
 
 	  
       ! !Find advection currents at original coordinates
-	   call CPU_TIME(times(1))
+	   IF (WriteModelTiming) call CPU_TIME(times(1))
 
 	   SELECT CASE (scheme)
 		CASE (1)
@@ -764,7 +764,7 @@ contains
       ! IF (WriteModelTiming) call CPU_TIME(times(4))
 
 
-	   call CPU_TIME(times(2))
+	   IF (WriteModelTiming) call CPU_TIME(times(2))
        IF (HTurbOn) CALL HTurb(TurbHx,TurbHy,int(par(n,pGID)))
 	   TurbHx=TurbHx*pm
 	   TurbHy=TurbHy*pn	
@@ -778,7 +778,7 @@ contains
 
 
 	  
-	   call CPU_TIME(times(3))
+	   IF (WriteModelTiming) call CPU_TIME(times(3))
 	   
 	  
 	   
@@ -795,7 +795,7 @@ contains
 
 
 	 
-	   call CPU_TIME(times(4))
+	   IF (WriteModelTiming) call CPU_TIME(times(4))
 	   !write(*,*) times(4)-times(3)
 	   
 		 
@@ -818,7 +818,7 @@ contains
       ! IF(WriteModelTiming) call CPU_TIME(times(7))
 
 	
-	   call CPU_TIME(times(5))
+	   IF (WriteModelTiming) call CPU_TIME(times(5))
       !Update due to Advection and Turbulence
       newXpos = par(n,pX) + AdvectX + TurbHx 
       newYpos = par(n,pY) + AdvectY + TurbHy
@@ -966,7 +966,7 @@ contains
       ! ! *                                                       *
       ! ! *********************************************************
 	  
-	   call CPU_TIME(times(6))
+	   IF (WriteModelTiming) call CPU_TIME(times(6))
 		if (SaltTempOn) then
 				
 				zetab =  getInterp2D("zeta",int(par(n,pGID)),par(n,pX),par(n,pY),t_b)
@@ -996,7 +996,7 @@ contains
       ! ! *                      End of Particle Loop                     *
       ! ! *****************************************************************
 
-      ! IF(WriteModelTiming) then
+      IF(WriteModelTiming) then
          call CPU_TIME(times(7))
 
          timeCounts(1) = timeCounts(1) + (times(2)-times(1))
@@ -1005,7 +1005,7 @@ contains
          timeCounts(4) = timeCounts(4) + (times(5)-times(4))
          timeCounts(5) = timeCounts(5) + (times(6)-times(5))
          timeCounts(6) = timeCounts(6) + (times(7)-times(6))
-      ! ENDIF
+      ENDIF
 
 
     ENDDO !end loop for each particle
