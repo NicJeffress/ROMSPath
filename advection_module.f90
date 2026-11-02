@@ -30,6 +30,7 @@ CONTAINS
 	
     INTEGER :: i,j,k,jlo,loop,itop,ibot
 	DOUBLE PRECISION :: P_depth,P_zeta,Zpar
+	DOUBLE PRECISION :: ixs(3)   ! RK stage times
 
 
     
@@ -62,7 +63,11 @@ CONTAINS
 			! write(1,"(E14.5,E14.5,E14.5,E14.5)") x1,y1,z1
 			! CLOSE(1)
       ! !Find advection currents at estimated next RK position
-       CALL find_currents(x1,y1,z1,ex,ix,ng,ets,Uad,Vad,Wad,P_depth,P_zeta)
+       ! RK4 stages 2 and 3 at t + idt/2, stage 4 at t + idt
+       ! (velocities were taken at t for all four stages)
+       ixs = ix
+       ixs(2) = ix(2) + DBLE(idt)/DBLE(2)
+       CALL find_currents(x1,y1,z1,ex,ixs,ng,ets,Uad,Vad,Wad,P_depth,P_zeta)
       ! CALL find_currents(x1,y1,z1,Pwc_zb,Pwc_zc,Pwc_zf,Pwc_wzb,Pwc_wzc,        &
                          ! Pwc_wzf,P_zb,P_zc,P_zf,ex,ix,p,2,Uad,Vad,Wad)
 
@@ -82,7 +87,7 @@ CONTAINS
 	  
 		
 		
-       CALL find_currents(x2,y2,z2,ex,ix,ng,ets,Uad,Vad,Wad,P_depth,P_zeta)
+       CALL find_currents(x2,y2,z2,ex,ixs,ng,ets,Uad,Vad,Wad,P_depth,P_zeta)
       ! CALL find_currents(x2,y2,z2,Pwc_zb,Pwc_zc,Pwc_zf,Pwc_wzb,Pwc_wzc,        &
                          ! Pwc_wzf,P_zb,P_zc,P_zf,ex,ix,p,2,Uad,Vad,Wad)
 
@@ -100,7 +105,8 @@ CONTAINS
       ! if(z3 .LT. maxpartdepth) z3 = maxpartdepth + DBLE(0.000001)
 
       ! !Find advection currents at the final position
-       CALL find_currents(x3,y3,z3,ex,ix,ng,ets,Uad,Vad,Wad,P_depth,P_zeta)
+       ixs(2) = ix(2) + DBLE(idt)
+       CALL find_currents(x3,y3,z3,ex,ixs,ng,ets,Uad,Vad,Wad,P_depth,P_zeta)
       ! CALL find_currents(x3,y3,z3,Pwc_zb,Pwc_zc,Pwc_zf,Pwc_wzb,Pwc_wzc,        &
                          ! Pwc_wzf,P_zb,P_zc,P_zf,ex,ix,p,3,Uad,Vad,Wad)
 
