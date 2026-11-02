@@ -125,6 +125,10 @@ CONTAINS
     double precision :: xfac, xpp, yfac, ypp,ymin,xmin,ymax,xmax
 	
 !    OPEN(10,FILE='TESTSTUFF.dat',STATUS='REPLACE')
+	if (GRIDS(1)%spherical(1).eq.0) then   ! Cartesian grids: ij_cartesian
+		call ij_cartesian(longrd,latgrd,inlon,inlat,numpar,xi_rho,eta_rho,Ipar,Jpar)
+		return
+	endif
 	do i=1,numpar
 		Imin=1
 		Imax=xi_rho
@@ -1268,6 +1272,77 @@ CONTAINS
 			pwrapy=Y-P*floor((Y-1.5d0)/P)
 		endif
 	END FUNCTION pwrapy
+
+	subroutine ij_cartesian(xg,yg,xin,yin,numpar,xi_rho,eta_rho,Ipar,Jpar)
+		! Fractional indices of points on a
+		! Cartesian curvilinear grid (e.g. an O-grid around an island): nearest rho point,
+		! then Newton on the bilinear map of each of the 4 cells around it.
+		! (The bisection + axis-aligned scaling in LL2ij assumes grid lines along
+		! x and y and fails on rotated cells and next to an O-grid seam.)
+		IMPLICIT NONE
+		integer, intent(in) :: numpar,xi_rho,eta_rho
+		double precision, intent(in) :: xg(xi_rho,eta_rho),yg(xi_rho,eta_rho),xin(numpar),yin(numpar)
+		double precision, intent(out) :: Ipar(numpar),Jpar(numpar)
+		integer :: n,i,j,i0,j0,ic,jc,di,dj,it,ia,ib,ja,jb
+		integer, parameter :: st=8   ! coarse search stride, then a local search
+		double precision :: d2,dmin,a,b,px,py,dxa,dxb,dya,dyb,det,ex,ey
+		do n=1,numpar
+			dmin=huge(1.0d0)
+			i0=1
+			j0=1
+			do j=1,eta_rho,st
+				do i=1,xi_rho,st
+					d2=(xg(i,j)-xin(n))**2+(yg(i,j)-yin(n))**2
+					if (d2.lt.dmin) then
+						dmin=d2
+						i0=i
+						j0=j
+					endif
+				enddo
+			enddo
+			ia=max(i0-2*st,1)
+			ib=min(i0+2*st,xi_rho)
+			ja=max(j0-2*st,1)
+			jb=min(j0+2*st,eta_rho)
+			do j=ja,jb
+				do i=ia,ib
+					d2=(xg(i,j)-xin(n))**2+(yg(i,j)-yin(n))**2
+					if (d2.lt.dmin) then
+						dmin=d2
+						i0=i
+						j0=j
+					endif
+				enddo
+			enddo
+			Ipar(n)=-1.0d0
+			Jpar(n)=-1.0d0
+			do di=-1,0
+				do dj=-1,0
+					ic=min(max(i0+di,1),xi_rho-1)
+					jc=min(max(j0+dj,1),eta_rho-1)
+					a=0.5d0
+					b=0.5d0
+					do it=1,30
+						px=(1-a)*(1-b)*xg(ic,jc)+a*(1-b)*xg(ic+1,jc)+a*b*xg(ic+1,jc+1)+(1-a)*b*xg(ic,jc+1)
+						py=(1-a)*(1-b)*yg(ic,jc)+a*(1-b)*yg(ic+1,jc)+a*b*yg(ic+1,jc+1)+(1-a)*b*yg(ic,jc+1)
+						dxa=(1-b)*(xg(ic+1,jc)-xg(ic,jc))+b*(xg(ic+1,jc+1)-xg(ic,jc+1))
+						dxb=(1-a)*(xg(ic,jc+1)-xg(ic,jc))+a*(xg(ic+1,jc+1)-xg(ic+1,jc))
+						dya=(1-b)*(yg(ic+1,jc)-yg(ic,jc))+b*(yg(ic+1,jc+1)-yg(ic,jc+1))
+						dyb=(1-a)*(yg(ic,jc+1)-yg(ic,jc))+a*(yg(ic+1,jc+1)-yg(ic+1,jc))
+						det=dxa*dyb-dxb*dya
+						ex=xin(n)-px
+						ey=yin(n)-py
+						a=a+(ex*dyb-ey*dxb)/det
+						b=b+(dxa*ey-dya*ex)/det
+					enddo
+					if ((a.ge.-1.0d-9).and.(a.le.1.0d0+1.0d-9).and.(b.ge.-1.0d-9).and.(b.le.1.0d0+1.0d-9).and.(Ipar(n).lt.0.0d0)) then
+						Ipar(n)=DBLE(ic)+a
+						Jpar(n)=DBLE(jc)+b
+					endif
+				enddo
+			enddo
+		enddo
+	end subroutine ij_cartesian
 
  SUBROUTINE getcoeff(X,Y,m,cff)
 		!This Function GETS coefficients
