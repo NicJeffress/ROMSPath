@@ -274,17 +274,12 @@ CONTAINS
 
       !a. U velocity
       ! 1. Prepare external time step values
-      if (ets .EQ. 1) then
-        ey=0.0
-        ey(1) = P_Ub
-        ey(2) = P_Ub
-        ey(3) = P_Uc
-      else
-        ey=0.0
-        ey(1) = P_Ub
-        ey(2) = P_Uc
-        ey(3) = P_Uf
-      endif
+      ! Records b, c, f at their own times in every
+      ! external step (was b, b, c in the first)
+      ey=0.0
+      ey(1) = P_Ub
+      ey(2) = P_Uc
+      ey(3) = P_Uf
 	
       ! 2. Get Advection value
       if(version .EQ. 1) then
@@ -297,17 +292,12 @@ CONTAINS
 
       !b. V velocity
       ! 1. Prepare external time step values
-      if (ets .EQ. 1) then
-        ey=0.0
-        ey(1) = P_Vb
-        ey(2) = P_Vb
-        ey(3) = P_Vc
-      else
-        ey=0.0
-        ey(1) = P_Vb
-        ey(2) = P_Vc
-        ey(3) = P_Vf
-      endif
+      ! Records b, c, f at their own times in every
+      ! external step (was b, b, c in the first)
+      ey=0.0
+      ey(1) = P_Vb
+      ey(2) = P_Vc
+      ey(3) = P_Vf
 		
       ! 2. Get Advection value
       if(version .EQ. 1) then
@@ -321,17 +311,12 @@ CONTAINS
 
       !c. W velocity
       ! 1. Prepare external time step values
-      if (ets .EQ. 1) then
-        ey=0.0
-        ey(1) = P_Wb
-        ey(2) = P_Wb
-        ey(3) = P_Wc
-      else
-        ey=0.0
-        ey(1) = P_Wb
-        ey(2) = P_Wc
-        ey(3) = P_Wf
-      endif
+      ! Records b, c, f at their own times in every
+      ! external step (was b, b, c in the first)
+      ey=0.0
+      ey(1) = P_Wb
+      ey(2) = P_Wc
+      ey(3) = P_Wf
 
       ! 2. Get Advection value
       if(version .EQ. 1) then

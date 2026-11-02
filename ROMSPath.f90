@@ -500,6 +500,13 @@ contains
       ex(1) = (ets-2)*dt
       ex(2) = (ets-1)*dt
       ex(3) = ets*dt
+      ! In the first external step the three records in
+      ! memory are at 0, dt, 2 dt (not -dt, 0, dt); interpolate through them
+      if (ets == 1) then
+        ex(1) = 0.0
+        ex(2) = dt
+        ex(3) = 2.0*dt
+      endif
 	 ! call CPU_TIME(before)
 	 call CPU_TIME(before)
 
@@ -516,13 +523,15 @@ contains
 
 
   subroutine run_Internal_Timestep()
-    use param_mod, only: idt,iPrint
+    use param_mod, only: dt,idt,iPrint
 
 	
     !  calculating Advection and Turbulence
-    ix(1) = ex(2) + DBLE((its-2)*idt)
-    ix(2) = ex(2) + DBLE((its-1)*idt)
-    ix(3) = ex(2) + DBLE(its*idt)
+    ! Particle time from the step counter (ex(2) is not the
+    ! interval start in the first external step)
+    ix(1) = DBLE(ets-1)*dt + DBLE((its-2)*idt)
+    ix(2) = DBLE(ets-1)*dt + DBLE((its-1)*idt)
+    ix(3) = DBLE(ets-1)*dt + DBLE(its*idt)
 
     !********************************************************
     !*                    Particle Loop                     *
