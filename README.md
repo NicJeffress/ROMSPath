@@ -1,10 +1,42 @@
 # ROMSPath (fork with fixes for periodic and curvilinear grids)
 
 This is a fork of [imcslatte/ROMSPath](https://github.com/imcslatte/ROMSPath) at
-upstream commit `6072ee9` (master, 2025-12-10). It adds periodic boundaries and
-fixes found while tracking particles on periodic ROMS grids, one commit each, so
-each can be offered upstream as a pull request. Everything else is upstream
+upstream commit `6072ee9` (master, 2025-12-10). I use ROMSPath to track
+particles (for example, water residence time in a lagoon) in idealized coral-reef
+simulations with COAWST (ROMS coupled to SWAN), which run on periodic,
+sometimes rotated, grids with waves. Everything not listed here is upstream
 ROMSPath, unchanged.
+
+## What I changed
+
+- **Added periodic boundaries and ROMS's Stokes drift names.** Idealized reef
+  domains repeat alongshore, so particles must leave one side and come back on
+  the other; ROMSPath had no periodic option. It also now reads the 3-D Stokes
+  drift under ROMS's own names (`u_stokes`, `v_stokes`), so it uses COAWST's
+  wave-driven transport directly.
+- **Fixed four timing bugs in the particle clock.** From the third step on, the
+  flow fields were one record behind the particles; the first step placed its
+  records one interval early; and the Runge-Kutta (RK4) step took all four
+  stages from the velocities at the start of the step, with the last stage
+  half a step short. Each moved particles with the wrong flow whenever the
+  flow changes in time.
+- **Fixed two grid bugs.** On Cartesian rotated or curvilinear grids, release
+  positions were converted to grid cells as if grid lines ran along x and y,
+  and the periodic wrap used a period one cell short, so every crossing moved
+  a particle by one cell.
+- **Made it faster and fixed a smaller bug.** Per-particle CPU timers now run only
+  when timing output is requested (29-43 % faster, same results), and two
+  end weights of the vertical-turbulence smoothing spline are now set.
+
+**How I checked it.** A periodic channel whose uniform flow speeds up from
+record to record has an exact answer. After 2 h, the fork with only the periodic
+boundaries added is 48 m off (40 m on a grid rotated by 30 degrees); with all
+the fixes it is exact to the output precision (0.0000 m on both grids). The test
+is [`tests/romspath/periodic-channel`](https://github.com/NicJeffress/coawst-cloud/tree/main/tests/romspath/periodic-channel)
+in coawst-cloud, which also builds this fork into a container image.
+
+Each change is its own commit, with a message that explains the bug and the
+fix, so each can be offered upstream as a pull request:
 
 | Commit | What it changes |
 |---|---|
@@ -17,13 +49,6 @@ ROMSPath, unchanged.
 | Per-particle CPU timers only with WriteModelTiming | 29-43 % faster, same results |
 | First external step: records at their own times | records were placed one interval early in the first step |
 | RK4: evaluate the stages at their own times | all four stages used the velocities at the step start |
-
-Each commit message explains the bug and the change.
-
-**Check.** A periodic channel with uniform flow that speeds up from record to
-record has an exact answer. After 2 h, ROMSPath with only the first commit is
-48 m off (40 m on a grid rotated by 30 degrees); with all commits it is exact to
-the output precision (0.0000 m on both grids).
 
 **Building.** As upstream (`make` with gfortran and NetCDF-Fortran). The makefile
 keeps the debug flags `-g -O0`; for production runs use optimisation, e.g.
